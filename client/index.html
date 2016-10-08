@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="">
+  <!-- ionic meta tags -->
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+  <!-- custom meta tags -->
+  <meta name="format-detection" content="telephone=no">
+  <!-- no auto telephone linking -->
+
+  <link href="https://unpkg.com/basscss@8.0.2/css/basscss.min.css" rel="stylesheet">
+  <link href="https://unpkg.com/basscss-responsive-margin@1.1.0/css/responsive-margin.css" rel="stylesheet">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- can be saved to home screen on ios -->
+  <title>EventIx</title>
+
+  <link rel="stylesheet" href="styles/vendor.css">
+
+  <link rel="stylesheet" href="main/styles/app.css">
+</head>
+
+<body ng-app="EventIx">
+
+  <!-- the nav bar will be updated as we navigate between views -->
+  <!-- <ion-nav-bar> can be removed when using sidemenu (contained in menu.html) -->
+  <!-- <ion-nav-bar class="bar-positive">
+      <ion-nav-back-button></ion-nav-back-button>
+    </ion-nav-bar> -->
+  <!-- the current view will be rendered in the <ion-nav-view> directive -->
+  <ion-nav-view></ion-nav-view>
+
+  <!-- will be a 404 during development -->
+  <script src="cordova.js"></script>
+
+  <script src="scripts/vendor.js"></script>
+
+  <script src="scripts/app.js"></script>
+</body>
+
+</html>

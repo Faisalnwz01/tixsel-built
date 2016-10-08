@@ -1,0 +1,195 @@
+<ion-view view-title="main module">
+  <!-- do you want padding? -->
+  <ion-content>
+    <navbar></navbar>
+
+    <img class="img" src="main/assets/images/background.jpg" />
+    <form name="eventSearch" novalidate>
+      <div layout="row" layout-align="center">
+        <div class="eventSearchbar">
+          <h1 class="header">I'm going to:</h1>
+          <md-content layout="row" class="searchRow">
+            <event-search-typeahead class="md-no-underline" flex selected-arr="ctrl.selectedEvent.selectedArray" selected-event="ctrl.selectedEvent.eventSearch"></event-search-typeahead>
+            <md-datepicker required md-input-name="checkInDate" class="md-no-underline margin-right md-warn " flex="15" ng-model="ctrl.selectedEvent.checkin"
+              md-placeholder="Check In"></md-datepicker>
+            <md-datepicker required md-input-name="checkOutDate" class="md-no-underline margin-right md-warn " flex="15" ng-model="ctrl.selectedEvent.checkout"
+              md-placeholder="Check out"></md-datepicker>
+            <md-select flex="20" ng-model="ctrl.selectedEvent.numOfAttendees" placeholder="1 Room, 2 Attendees" class="md-whiteframe-1dp md-no-underline no-margin">
+              <md-option value="{{::num}} Room, {{::num * 2}} Attendees" ng-repeat="num in [1,2,3,4]">{{::num}} Room, {{::num * 2}} Attendees
+              </md-option>
+            </md-select>
+            <md-button flex="15" ng-disabled="eventSearch.$invalid" ng-click="ctrl.searchForFlights(ctrl.selectedEvent)" class="searchBtn md-warn md-raised md-hue-2">Search</md-button>
+          </md-content>
+          <!-- depature row -->
+          <md-content layout="row" class="margin-top departureAirportSearch" ng-if="ctrl.selectedEvent.servicesType !== '2'">
+            <h5 flex="15" class="textHeader mrs">Depart From:</h5>
+            <airport-autocomplete class="width-100" required="ctrl.selectedEvent.servicesType !== '2'" selected-airport="ctrl.selectedEvent.departureAirport"
+              placeholder="Select Airport"> </airport-autocomplete>
+          </md-content>
+          <!-- package row -->
+          <md-radio-group ng-model="ctrl.selectedEvent.servicesType">
+            <div layout="row" class="optionsBar">
+              <h4 class="white" flex="14">Search for:</h4>
+              <md-radio-button class="taf" flex="50" value="3">
+                <h5 class="white">Tickets + Accommodations + Flights</h5>
+              </md-radio-button>
+              <md-radio-button flex value="2">
+                <h5 class="white">Tickets + Accommodations</h5>
+              </md-radio-button>
+            </div>
+          </md-radio-group>
+        </div>
+      </div>
+    </form>
+    <md-card class="padding">
+      <h5>Selected Event flights</h5>
+
+      <div layout="row">
+        <div flex="60">
+          <div layout="row">
+            <div flex="20">
+              <p>
+                From -> to
+              </p>
+            </div>
+            <p flex="20">
+              airline Name
+            </p>
+            <p flex="20">
+              flight Number
+            </p>
+            <p flex="20">
+              Departure Time
+            </p>
+            <p flex="20">
+              Arrival Time
+            </p>
+          </div>
+        </div>
+        <div flex="40" layout="row">
+          <p flex="50">
+            number Of Tickets
+          </p>
+          <p flex="50">
+            Flight Price
+          </p>
+        </div>
+      </div>
+
+      <div ng-repeat="flight in ctrl.selectedEventIte.flights.offers track by $index" class="padding">
+        <div layout="row">
+          <div flex="60">
+            <div layout="row" ng-repeat="segment in ctrl.legsLookup(flight.legIds[0])">
+              <div flex="20">
+                <p>
+                  {{segment.departureAirportCode}} -> {{segment.arrivalAirportCode}}
+                </p>
+              </div>
+              <p flex="20">
+                {{segment.airlineName}}
+              </p>
+              <p flex="20">
+                {{segment.flightNumber}}
+              </p>
+              <p flex="20">
+                {{segment.departureTime | date}}
+              </p>
+              <p flex="20">
+                {{segment.arrivalTime | date}}
+              </p>
+            </div>
+          </div>
+          <div flex="40" layout="row">
+
+            <p flex="50">
+              {{flight.numberOfTickets}}
+            </p>
+            <p flex="50">
+              {{flight.totalPrice.formattedWholePrice}}
+            </p>
+          </div>
+        </div>
+        <md-divider></md-divider>
+      </div>
+    </md-card>
+    <md-card class="padding">
+      <h5>Selected Event Hotels</h5>
+      <div layout="row">
+        <p flex="20">
+          Hotel Name
+        </p>
+        <p flex="20">
+          Hotel City
+        </p>
+        <p flex="20">
+          Number of Nights
+        </p>
+        <p flex="20">
+          check In Date
+        </p>
+        <p flex="20">
+          check out Date
+        </p>
+        <p flex="20">
+          Rating
+        </p>
+      </div>
+      <div ng-repeat="hotel in ctrl.selectedEventIte.hotels track by hotel.hotelId">
+        <div layout="row">
+          <p flex="20">
+            {{hotel.hotelName}}
+          </p>
+          <p flex="20">
+            {{hotel.hotelCity}}
+          </p>
+          <p flex="20">
+            {{hotel.numberOfNights}}
+          </p>
+          <p flex="20">
+            {{hotel.checkInDate}}
+          </p>
+          <p flex="20">
+            {{hotel.checkOutDate}}
+          </p>
+          <p flex="20">
+            {{hotel.hotelGuestRating}}
+          </p>
+        </div>
+        <div layout="row">
+          <p flex="20">
+            Room Information
+          </p>
+          <p flex="20">
+            Rate Change
+          </p>
+          <p flex="20">
+            non Refundable
+          </p>
+          <p flex="20">
+            Bed Type
+          </p>
+          <p flex="20">
+            Hotel Rate for {{hotel.numberOfNights}} Nights
+          </p>
+        </div>
+        <div layout="row" ng-repeat="hotelRoom in hotel.hotelRoomResponse">
+          <p flex="20"></p>
+          <p flex="20">
+            {{hotelRoom.rateChange}}
+          </p>
+          <p flex="20">
+            {{hotelRoom.nonRefundable}}
+          </p>
+          <p flex="20">
+            {{hotelRoom.bedTypes[0].description}}
+          </p>
+          <p flex="20">
+            {{hotelRoom.rateInfo.chargeableRateInfo.formattedTotalPriceWithMandatoryFees}}
+          </p>
+        </div>
+
+      </div>
+    </md-card>
+
+  </ion-content>
+</ion-view>
