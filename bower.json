@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "angular-animate": "~1.5.0",
+    "angular-dynamic-locale": "~0.1.27",
+    "angular-dynamic-locale": "~0.1.27",
+    "angular-material": "^1.1.1",
+    "angular-sanitize": "~1.5.0",
+    "angular-translate-loader-static-files": "~2.11.0",
+    "angular-translate": "~2.11.0",
+    "angular-ui-router": "~0.3.1",
+    "angular": "~1.5.0",
+    "css-helpers": "css-helpers-lib#*",
+    "localforage": "~1.4.0",
+    "lodash": "^4.16.2",
+    "moment": "^2.15.1",
+    "ngCordova": "~0.1.17-alpha"
+  },
+  "name": "event-ix",
+  "private": true
+}
