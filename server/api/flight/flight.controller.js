@@ -14,6 +14,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _stringify = require('babel-runtime/core-js/json/stringify');
+
+var _stringify2 = _interopRequireDefault(_stringify);
+
 var _promise = require('babel-runtime/core-js/promise');
 
 var _promise2 = _interopRequireDefault(_promise);
@@ -36,6 +40,10 @@ var _flight2 = _interopRequireDefault(_flight);
 var _requestPromise = require('request-promise');
 
 var _requestPromise2 = _interopRequireDefault(_requestPromise);
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -89,11 +97,43 @@ function handleError(res, statusCode) {
   };
 }
 
+function lookUpAirportByLatLong(lat, long) {
+  var airportLookupUrl = 'http://terminal2.expedia.com/x/geo/features?within=30km&lat=' + lat + '&lng=' + long + '&type=airport&verbose=3&apikey=BAGEROtURYYysKTHQIE7HK5m0tOFIjSH';
+  return (0, _requestPromise2.default)(airportLookupUrl);
+}
+
+function geocode(address) {
+  var geocodeUrl = 'http://maps.googleapis.com/maps/api/geocode/json?address=' + address;
+  return (0, _requestPromise2.default)(geocodeUrl).then(function (data) {
+    return data.data;
+  });
+}
+
 // Gets a list of Flights
 function index(req, res) {
   var flightsUrl = 'http://terminal2.expedia.com/x/mflights/search?';
-  var url = flightsUrl + 'departureAirport=' + req.query.departureAirport + '&arrivalAirport=' + req.query.arrivalAirport + '&departureDate=' + req.query.departureDate + '&apikey=BAGEROtURYYysKTHQIE7HK5m0tOFIjSH';
-  return (0, _requestPromise2.default)(url).then(respondWithResult(res));
+  var arrivalAirport = lookUpAirportByLatLong(req.query.lat, req.query.long).then(function (data) {
+    arrivalAirport = JSON.parse(data)[0].tags.iata.airportCode.value;
+    var url = flightsUrl + 'departureAirport=' + req.query.departureAirport + '&arrivalAirport=' + arrivalAirport + '&departureDate=' + req.query.departureDate + '&apikey=BAGEROtURYYysKTHQIE7HK5m0tOFIjSH';
+    return (0, _requestPromise2.default)(url).then(function (flightRes) {
+      var fr = JSON.parse(flightRes);
+      var a = _lodash2.default.map(fr.offers, function (offer) {
+        offer.segments = legsLookup(offer.legIds[0], fr);
+        return offer;
+      });
+      return (0, _stringify2.default)(a);
+    }).then(respondWithResult(res)).catch(handleError(res));
+  });
+}
+
+function legsLookup(id, flights) {
+  var property = '';
+  flights.legs.forEach(function (leg) {
+    if (leg.legId === id) {
+      property = leg.segments;
+    }
+  });
+  return property;
 }
 
 // Gets a single Flight from the DB

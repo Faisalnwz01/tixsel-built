@@ -20,6 +20,7 @@ var _promise2 = _interopRequireDefault(_promise);
 
 exports.index = index;
 exports.show = show;
+exports.offers = offers;
 exports.create = create;
 exports.upsert = upsert;
 exports.patch = patch;
@@ -91,13 +92,20 @@ function handleError(res, statusCode) {
 
 // Gets a list of Events matching a given key
 function index(req, res) {
-  var eventUrsl = 'http://app.ticketmaster.com/discovery/v2/events.json?keyword=' + req.query.key + '&countryCode=US&apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
-  return _requestPromise2.default.get(eventUrsl).then(respondWithResult(res));
+  var eventUrl = 'http://app.ticketmaster.com/discovery/v2/events.json?keyword=' + req.query.key + '&countryCode=US&apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
+  return _requestPromise2.default.get(eventUrl).then(respondWithResult(res)).catch(handleError(res));
 }
 
 // Gets a single Event from the DB
 function show(req, res) {
-  return _event2.default.findById(req.params.id).exec().then(handleEntityNotFound(res)).then(respondWithResult(res)).catch(handleError(res));
+  var eventDetailUrl = 'http://app.ticketmaster.com/discovery/v2/events/' + req.params.id + '.json?apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
+  return _requestPromise2.default.get(eventDetailUrl).then(respondWithResult(res)).catch(handleError(res));
+}
+
+// Gets a single Event from the DB
+function offers(req, res) {
+  var eventDetailUrl = 'http://app.ticketmaster.com/commerce/v2/events/' + req.params.id + '/offers.json?apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
+  return _requestPromise2.default.get(eventDetailUrl).then(respondWithResult(res)).catch(handleError(res));
 }
 
 // Creates a new Event in the DB
