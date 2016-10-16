@@ -38,6 +38,10 @@ var _requestPromise = require('request-promise');
 
 var _requestPromise2 = _interopRequireDefault(_requestPromise);
 
+var _moment = require('moment');
+
+var _moment2 = _interopRequireDefault(_moment);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function respondWithResult(res, statusCode) {
@@ -92,7 +96,8 @@ function handleError(res, statusCode) {
 
 // Gets a list of Events matching a given key
 function index(req, res) {
-  var eventUrl = 'http://app.ticketmaster.com/discovery/v2/events.json?keyword=' + req.query.key + '&countryCode=US&apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
+  var eventUrl = 'http://app.ticketmaster.com/discovery/v2/events.json?keyword=' + req.query.key + '&startDateTime=' + (0, _moment2.default)().format('YYYY-MM-DDTHH:mm:ss') + 'Z&countryCode=US&apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
+  console.log(eventUrl);
   return _requestPromise2.default.get(eventUrl).then(respondWithResult(res)).catch(handleError(res));
 }
 

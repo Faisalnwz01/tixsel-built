@@ -12,7 +12,6 @@
     "css-helpers": "css-helpers-lib#*",
     "localforage": "~1.4.0",
     "lodash": "^4.16.2",
-    "moment": "^2.15.1",
     "ngCordova": "~0.1.17-alpha"
   },
   "name": "event-ix",
