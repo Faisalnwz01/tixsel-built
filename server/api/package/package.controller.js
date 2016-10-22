@@ -41,6 +41,10 @@ var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
+var _moment = require('moment');
+
+var _moment2 = _interopRequireDefault(_moment);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var hotelCtrl = require('../hotel/hotel.controller.js');
@@ -96,9 +100,16 @@ function handleError(res, statusCode) {
   };
 }
 
-function getAllData(id) {
-  return _q2.default.all([hotelCtrl.getAllHotels('33.88442690,-84.45836310', '2016-11-17', '2016-11-20'), flightCtrl.getAllFlights('33.88442690', '-84.45836310', 'JFK', '2016-11-17T19:00:00-05:00'), eventCtrl.getEventOffer('vvG1zZf11rd0EQ')]).then(function (data) {
-    return silverPackage(data, id);
+function formatDate(date) {
+  return (0, _moment2.default)(date).format('YYYY-MM-DD');
+}
+
+function getAllData(id, lat, long, departureAirport, departureDate, eventId, arrivalDate) {
+  return _q2.default.all([hotelCtrl.getAllHotels(lat + ',' + long, formatDate(departureDate), formatDate(arrivalDate)), flightCtrl.getAllFlights(lat, long, departureAirport, (0, _moment2.default)(departureDate).format()), eventCtrl.getEventOffer(eventId)]).then(function (data) {
+    return {
+      silver: silverPackage(data),
+      vip: vipPackage(data)
+    };
   });
 }
 
@@ -107,12 +118,32 @@ function silverPackage(iter) {
     return Number(a.lowRate);
   });
   var flight = _lodash2.default.orderBy(iter[1], function (a) {
-    return Number(a.baseFare);
+    return Number(a.totalFare);
   });
+  var events = iter[2];
+  // _.map(events.offers, function (offer) {
+  //   offer.attributes.prices = _.last(_.chunk(offer.attributes.prices, Math.ceil(offer.attributes.prices.length / 4)));
+  // });
   return {
-    hotel: hotel.slice(0, hotel.length / 4),
-    flight: flight.slice(0, flight.length / 4),
-    events: iter[2]
+    hotel: _lodash2.default.chunk(hotel, hotel.length / 4)[0],
+    flight: _lodash2.default.chunk(flight, flight.length / 4)[0],
+    events: events
+  };
+}
+
+function vipPackage(iter) {
+  var hotel = _lodash2.default.orderBy(iter[0][0], ['hotelStarRating', 'proximityDistanceInMiles', 'percentRecommended', 'lowRate'], ['desc', 'asc', 'desc', 'asc']);
+  var flight = _lodash2.default.orderBy(iter[1], function (a) {
+    return [a.segments.length, Number(a.totalFare)];
+  });
+  var events = iter[2];
+  // _.map(events.offers, function (offer) {
+  //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
+  // });
+  return {
+    hotel: _lodash2.default.chunk(hotel, hotel.length / 4)[0],
+    flight: _lodash2.default.chunk(flight, flight.length / 4)[0],
+    events: events
   };
 }
 
@@ -125,7 +156,9 @@ function index(req, res) {
 // ids are for packages type
 // 0 = silver & 3 = vip
 function show(req, res) {
-  getAllData(req.params.id)
+  // req.query.lat, req.query.long, req.query.departureAirport, req.query.departureDate,
+  // req.query.eventId, req.query.arrivalDate
+  getAllData(req.params.id, req.query.lat, req.query.long, req.query.departureAirport, req.query.departureDate, req.query.eventId, req.query.arrivalDate)
   // return Package.findById(req.params.id).exec()
   //   .then(handleEntityNotFound(res))
   .then(respondWithResult(res)).catch(handleError(res));

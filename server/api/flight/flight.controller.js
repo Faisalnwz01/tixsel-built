@@ -110,19 +110,27 @@ function geocode(address) {
   });
 }
 
-function getAllFlights(lat, long, departureAirport, departureDate) {
+function getAllFlights(lat, long, departureAirport, departureDate, arrivalAirport) {
   var flightsUrl = 'http://terminal2.expedia.com/x/mflights/search?';
-  return lookUpAirportByLatLong(lat, long).then(function (data) {
-    var arrivalAirport = JSON.parse(data)[0].tags.iata.airportCode.value;
-    var url = flightsUrl + 'departureAirport=' + departureAirport + '&arrivalAirport=' + arrivalAirport + '&departureDate=' + departureDate + '&apikey=BAGEROtURYYysKTHQIE7HK5m0tOFIjSH';
-    return (0, _requestPromise2.default)(url).then(function (flightRes) {
-      var fr = JSON.parse(flightRes);
-      var a = _lodash2.default.map(fr.offers, function (offer) {
-        offer.segments = legsLookup(offer.legIds[0], fr);
-        return offer;
-      });
-      return a;
+  if (!arrivalAirport) {
+    return lookUpAirportByLatLong(lat, long).then(function (data) {
+      arrivalAirport = JSON.parse(data)[0].tags.iata.airportCode.value;
+      return searchFlights(flightsUrl, departureAirport, arrivalAirport, departureDate);
     });
+  } else {
+    return searchFlights(flightsUrl, departureAirport, arrivalAirport, departureDate);
+  }
+}
+
+function searchFlights(flightsUrl, departureAirport, arrivalAirport, departureDate) {
+  var url = flightsUrl + 'departureAirport=' + departureAirport + '&arrivalAirport=' + arrivalAirport + '&departureDate=' + departureDate + '&apikey=BAGEROtURYYysKTHQIE7HK5m0tOFIjSH';
+  return (0, _requestPromise2.default)(url).then(function (flightRes) {
+    var fr = JSON.parse(flightRes);
+    var a = _lodash2.default.map(fr.offers, function (offer) {
+      offer.segments = legsLookup(offer.legIds[0], fr);
+      return offer;
+    });
+    return a;
   });
 }
 
