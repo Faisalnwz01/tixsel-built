@@ -22,6 +22,7 @@ var _promise = require('babel-runtime/core-js/promise');
 
 var _promise2 = _interopRequireDefault(_promise);
 
+exports.getAllFlights = getAllFlights;
 exports.index = index;
 exports.show = show;
 exports.create = create;
@@ -109,21 +110,27 @@ function geocode(address) {
   });
 }
 
-// Gets a list of Flights
-function index(req, res) {
+function getAllFlights(lat, long, departureAirport, departureDate) {
   var flightsUrl = 'http://terminal2.expedia.com/x/mflights/search?';
-  var arrivalAirport = lookUpAirportByLatLong(req.query.lat, req.query.long).then(function (data) {
-    arrivalAirport = JSON.parse(data)[0].tags.iata.airportCode.value;
-    var url = flightsUrl + 'departureAirport=' + req.query.departureAirport + '&arrivalAirport=' + arrivalAirport + '&departureDate=' + req.query.departureDate + '&apikey=BAGEROtURYYysKTHQIE7HK5m0tOFIjSH';
+  return lookUpAirportByLatLong(lat, long).then(function (data) {
+    var arrivalAirport = JSON.parse(data)[0].tags.iata.airportCode.value;
+    var url = flightsUrl + 'departureAirport=' + departureAirport + '&arrivalAirport=' + arrivalAirport + '&departureDate=' + departureDate + '&apikey=BAGEROtURYYysKTHQIE7HK5m0tOFIjSH';
     return (0, _requestPromise2.default)(url).then(function (flightRes) {
       var fr = JSON.parse(flightRes);
       var a = _lodash2.default.map(fr.offers, function (offer) {
         offer.segments = legsLookup(offer.legIds[0], fr);
         return offer;
       });
-      return (0, _stringify2.default)(a);
-    }).then(respondWithResult(res)).catch(handleError(res));
+      return a;
+    });
   });
+}
+
+// Gets a list of Flights
+function index(req, res) {
+  getAllFlights(req.query.lat, req.query.long, req.query.departureAirport, req.query.departureDate).then(function (r) {
+    return (0, _stringify2.default)(r);
+  }).then(respondWithResult(res)).catch(handleError(res));
 }
 
 function legsLookup(id, flights) {

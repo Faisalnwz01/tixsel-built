@@ -22,6 +22,7 @@ var _promise = require('babel-runtime/core-js/promise');
 
 var _promise2 = _interopRequireDefault(_promise);
 
+exports.getAllHotels = getAllHotels;
 exports.index = index;
 exports.show = show;
 exports.create = create;
@@ -131,9 +132,13 @@ function priceForHotels(hotelId, checkInDate, checkOutDate) {
   });
 }
 
+function getAllHotels(location, checkInDate, checkOutDate) {
+  return _q2.default.all([searchForHotelsExpedia(location, checkInDate, checkOutDate)]);
+}
+
 // Gets a list of Hotels
 function index(req, res) {
-  _q2.default.all([searchForHotelsExpedia(req.query.location, req.query.checkInDate, req.query.checkOutDate)]).then(function (data) {
+  getAllHotels(req.query.location, req.query.checkInDate, req.query.checkOutDate).then(function (data) {
     return _lodash2.default.each(data[0], function (hotel) {
       hotel.rate = hotel.lowRateInfo;
     });

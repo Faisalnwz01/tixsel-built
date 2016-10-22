@@ -18,6 +18,7 @@ var _promise = require('babel-runtime/core-js/promise');
 
 var _promise2 = _interopRequireDefault(_promise);
 
+exports.getEventOffer = getEventOffer;
 exports.index = index;
 exports.show = show;
 exports.offers = offers;
@@ -94,6 +95,13 @@ function handleError(res, statusCode) {
   };
 }
 
+function getEventOffer(id) {
+  var eventDetailUrl = 'http://app.ticketmaster.com/commerce/v2/events/' + id + '/offers.json?apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
+  return _requestPromise2.default.get(eventDetailUrl).then(function (r) {
+    return JSON.parse(r);
+  });
+}
+
 // Gets a list of Events matching a given key
 function index(req, res) {
   var eventUrl = 'http://app.ticketmaster.com/discovery/v2/events.json?keyword=' + req.query.key + '&startDateTime=' + (0, _moment2.default)().format('YYYY-MM-DDTHH:mm:ss') + 'Z&countryCode=US&apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
@@ -109,8 +117,7 @@ function show(req, res) {
 
 // Gets a single Event from the DB
 function offers(req, res) {
-  var eventDetailUrl = 'http://app.ticketmaster.com/commerce/v2/events/' + req.params.id + '/offers.json?apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
-  return _requestPromise2.default.get(eventDetailUrl).then(respondWithResult(res)).catch(handleError(res));
+  getEventOffer(req.params.id).then(respondWithResult(res)).catch(handleError(res));
 }
 
 // Creates a new Event in the DB
