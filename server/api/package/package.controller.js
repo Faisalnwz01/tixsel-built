@@ -107,28 +107,12 @@ function formatDate(date) {
 function getAllData(id, lat, long, departureAirport, departureDate, eventId, arrivalDate) {
   return _q2.default.all([hotelCtrl.getAllHotels(lat + ',' + long, formatDate(departureDate), formatDate(arrivalDate)), flightCtrl.getAllFlights(lat, long, departureAirport, (0, _moment2.default)(departureDate).format()), eventCtrl.getEventOffer(eventId)]).then(function (data) {
     return {
-      silver: silverPackage(data),
+      gold: goldPackage(data),
+      backstage: backstagePackage(data),
+      'red carpet': redcarpetPackage(data),
       vip: vipPackage(data)
     };
   });
-}
-
-function silverPackage(iter) {
-  var hotel = _lodash2.default.orderBy(iter[0][0], function (a) {
-    return Number(a.lowRate);
-  });
-  var flight = _lodash2.default.orderBy(iter[1], function (a) {
-    return Number(a.totalFare);
-  });
-  var events = iter[2];
-  // _.map(events.offers, function (offer) {
-  //   offer.attributes.prices = _.last(_.chunk(offer.attributes.prices, Math.ceil(offer.attributes.prices.length / 4)));
-  // });
-  return {
-    hotel: _lodash2.default.chunk(hotel, hotel.length / 4)[0],
-    flight: _lodash2.default.chunk(flight, flight.length / 4)[0],
-    events: events
-  };
 }
 
 function vipPackage(iter) {
@@ -146,7 +130,54 @@ function vipPackage(iter) {
     events: events
   };
 }
+function backstagePackage(iter) {
+  var hotel = _lodash2.default.orderBy(iter[0][0], ['hotelStarRating', 'proximityDistanceInMiles', 'percentRecommended', 'lowRate'], ['desc', 'asc', 'desc', 'asc']);
+  var flight = _lodash2.default.orderBy(iter[1], function (a) {
+    return [a.segments.length, Number(a.totalFare)];
+  });
+  var events = iter[2];
+  // _.map(events.offers, function (offer) {
+  //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
+  // });
+  return {
+    hotel: _lodash2.default.chunk(hotel, hotel.length / 4)[2],
+    flight: _lodash2.default.chunk(flight, flight.length / 4)[2],
+    events: events
+  };
+}
+function redcarpetPackage(iter) {
+  var hotel = _lodash2.default.orderBy(iter[0][0], ['hotelStarRating', 'proximityDistanceInMiles', 'percentRecommended', 'lowRate'], ['desc', 'asc', 'desc', 'asc']);
+  var flight = _lodash2.default.orderBy(iter[1], function (a) {
+    return [a.segments.length, Number(a.totalFare)];
+  });
+  var events = iter[2];
+  // _.map(events.offers, function (offer) {
+  //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
+  // });
+  return {
+    hotel: _lodash2.default.chunk(hotel, hotel.length / 4)[1],
+    flight: _lodash2.default.chunk(flight, flight.length / 4)[1],
+    events: events
+  };
+}
 
+function goldPackage(iter) {
+  var hotel = _lodash2.default.orderBy(iter[0][0], function (a) {
+    return Number(a.lowRate);
+  });
+  var flight = _lodash2.default.orderBy(iter[1], function (a) {
+    return Number(a.totalFare);
+  });
+  var events = iter[2];
+  // _.map(events.offers, function (offer) {
+  //   offer.attributes.prices = _.last(_.chunk(offer.attributes.prices, Math.ceil(offer.attributes.prices.length / 4)));
+  // });
+  return {
+    hotel: _lodash2.default.chunk(hotel, hotel.length / 4)[0],
+    flight: _lodash2.default.chunk(flight, flight.length / 4)[0],
+    events: events
+  };
+}
 // Gets a list of Packages
 function index(req, res) {
   return _package2.default.find().exec().then(respondWithResult(res)).catch(handleError(res));
@@ -154,7 +185,7 @@ function index(req, res) {
 
 // Gets a single Package from the DB
 // ids are for packages type
-// 0 = silver & 3 = vip
+// 0 = gold & 3 = vip
 function show(req, res) {
   // req.query.lat, req.query.long, req.query.departureAirport, req.query.departureDate,
   // req.query.eventId, req.query.arrivalDate
