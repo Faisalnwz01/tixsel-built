@@ -120,7 +120,10 @@ function vipPackage(iter) {
   var flight = _lodash2.default.orderBy(iter[1], function (a) {
     return [a.segments.length, Number(a.totalFare)];
   });
-  var events = iter[2];
+  var events = _lodash2.default.cloneDeep(iter[2]);
+  events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
+    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices.reverse(), ticketTypes.attributes.prices.length / 4)[3];
+  });
   // _.map(events.offers, function (offer) {
   //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
   // });
@@ -130,12 +133,17 @@ function vipPackage(iter) {
     events: events
   };
 }
+
 function backstagePackage(iter) {
   var hotel = _lodash2.default.orderBy(iter[0][0], ['hotelStarRating', 'proximityDistanceInMiles', 'percentRecommended', 'lowRate'], ['desc', 'asc', 'desc', 'asc']);
   var flight = _lodash2.default.orderBy(iter[1], function (a) {
     return [a.segments.length, Number(a.totalFare)];
   });
-  var events = iter[2];
+  //price array for events is nested deep iter[2].offers[0].attributes.prices
+  var events = _lodash2.default.cloneDeep(iter[2]);
+  events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
+    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices.reverse(), ticketTypes.attributes.prices.length / 4)[2];
+  });
   // _.map(events.offers, function (offer) {
   //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
   // });
@@ -145,12 +153,16 @@ function backstagePackage(iter) {
     events: events
   };
 }
+
 function redcarpetPackage(iter) {
   var hotel = _lodash2.default.orderBy(iter[0][0], ['hotelStarRating', 'proximityDistanceInMiles', 'percentRecommended', 'lowRate'], ['desc', 'asc', 'desc', 'asc']);
   var flight = _lodash2.default.orderBy(iter[1], function (a) {
     return [a.segments.length, Number(a.totalFare)];
   });
-  var events = iter[2];
+  var events = _lodash2.default.cloneDeep(iter[2]);
+  events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
+    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices.reverse(), ticketTypes.attributes.prices.length / 4)[1];
+  });
   // _.map(events.offers, function (offer) {
   //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
   // });
@@ -168,7 +180,11 @@ function goldPackage(iter) {
   var flight = _lodash2.default.orderBy(iter[1], function (a) {
     return Number(a.totalFare);
   });
-  var events = iter[2];
+  // var events = iter[2];
+  var events = _lodash2.default.cloneDeep(iter[2]);
+  events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
+    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices.reverse(), ticketTypes.attributes.prices.length / 4)[0];
+  });
   // _.map(events.offers, function (offer) {
   //   offer.attributes.prices = _.last(_.chunk(offer.attributes.prices, Math.ceil(offer.attributes.prices.length / 4)));
   // });
