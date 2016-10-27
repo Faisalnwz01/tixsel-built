@@ -14,6 +14,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _stringify = require('babel-runtime/core-js/json/stringify');
+
+var _stringify2 = _interopRequireDefault(_stringify);
+
 var _promise = require('babel-runtime/core-js/promise');
 
 var _promise2 = _interopRequireDefault(_promise);
@@ -122,7 +126,12 @@ function vipPackage(iter) {
   });
   var events = _lodash2.default.cloneDeep(iter[2]);
   events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
-    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices.reverse(), ticketTypes.attributes.prices.length / 4)[3];
+    ticketTypes.attributes.prices = _lodash2.default.orderBy(ticketTypes.attributes.prices, function (a) {
+      console.log(Number(a.priceZone), '******');
+      return Number(a.priceZone);
+    });
+    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[0];
+    console.log('vipPackage: ' + (0, _stringify2.default)(_lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[0]));
   });
   // _.map(events.offers, function (offer) {
   //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
@@ -142,7 +151,11 @@ function backstagePackage(iter) {
   //price array for events is nested deep iter[2].offers[0].attributes.prices
   var events = _lodash2.default.cloneDeep(iter[2]);
   events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
-    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices.reverse(), ticketTypes.attributes.prices.length / 4)[2];
+    ticketTypes.attributes.prices = _lodash2.default.orderBy(ticketTypes.attributes.prices, function (a) {
+      return Number(a.priceZone);
+    });
+    console.log('backstagePackage: ' + (0, _stringify2.default)(_lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[1]));
+    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[1];
   });
   // _.map(events.offers, function (offer) {
   //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
@@ -161,7 +174,11 @@ function redcarpetPackage(iter) {
   });
   var events = _lodash2.default.cloneDeep(iter[2]);
   events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
-    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices.reverse(), ticketTypes.attributes.prices.length / 4)[1];
+    ticketTypes.attributes.prices = _lodash2.default.orderBy(ticketTypes.attributes.prices, function (a) {
+      return Number(a.priceZone);
+    });
+    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[2];
+    console.log('redcarpetPackage: ' + (0, _stringify2.default)(_lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[2]));
   });
   // _.map(events.offers, function (offer) {
   //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
@@ -183,7 +200,11 @@ function goldPackage(iter) {
   // var events = iter[2];
   var events = _lodash2.default.cloneDeep(iter[2]);
   events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
-    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices.reverse(), ticketTypes.attributes.prices.length / 4)[0];
+    ticketTypes.attributes.prices = _lodash2.default.orderBy(ticketTypes.attributes.prices, function (a) {
+      return Number(a.priceZone);
+    });
+    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[3];
+    console.log('goldPackage: ' + (0, _stringify2.default)(_lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[3]));
   });
   // _.map(events.offers, function (offer) {
   //   offer.attributes.prices = _.last(_.chunk(offer.attributes.prices, Math.ceil(offer.attributes.prices.length / 4)));

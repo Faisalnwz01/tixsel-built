@@ -21,6 +21,7 @@ var _promise2 = _interopRequireDefault(_promise);
 exports.getEventOffer = getEventOffer;
 exports.index = index;
 exports.show = show;
+exports.eventRecommendation = eventRecommendation;
 exports.offers = offers;
 exports.create = create;
 exports.upsert = upsert;
@@ -113,6 +114,12 @@ function index(req, res) {
 function show(req, res) {
   var eventDetailUrl = 'http://app.ticketmaster.com/discovery/v2/events/' + req.params.id + '.json?apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
   return _requestPromise2.default.get(eventDetailUrl).then(respondWithResult(res)).catch(handleError(res));
+}
+
+// Gets a single Event from the DB
+function eventRecommendation(req, res) {
+  var eventsRecommendationUrl = 'https://api.seatgeek.com/2/recommendations?performers.id=2090&postal_code=90001&client_id=NTk1MjMxOXwxNDc2MzkwMTM0';
+  return _requestPromise2.default.get(eventsRecommendationUrl).then(respondWithResult(res)).catch(handleError(res));
 }
 
 // Gets a single Event from the DB

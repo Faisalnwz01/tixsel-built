@@ -6,6 +6,7 @@ var controller = require('./event.controller');
 var router = express.Router();
 
 router.get('/', controller.index);
+router.get('/recomendedEvents/', controller.eventRecommendation);
 router.get('/:id/offers', controller.offers);
 router.get('/:id', controller.show);
 router.post('/', controller.create);
