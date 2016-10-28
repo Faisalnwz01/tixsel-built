@@ -51,7 +51,7 @@ var socketio = require('socket.io')(server, {
 require('./config/socketio').default(socketio);
 require('./config/express').default(app);
 require('./routes').default(app);
-
+require('events').EventEmitter.prototype._maxListeners = 100;
 // Start server
 function startServer() {
   app.angularFullstack = server.listen(_environment2.default.port, _environment2.default.ip, function () {
