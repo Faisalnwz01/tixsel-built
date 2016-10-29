@@ -14,6 +14,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _stringify = require('babel-runtime/core-js/json/stringify');
+
+var _stringify2 = _interopRequireDefault(_stringify);
+
 var _promise = require('babel-runtime/core-js/promise');
 
 var _promise2 = _interopRequireDefault(_promise);
@@ -43,6 +47,14 @@ var _requestPromise2 = _interopRequireDefault(_requestPromise);
 var _moment = require('moment');
 
 var _moment2 = _interopRequireDefault(_moment);
+
+var _q = require('q');
+
+var _q2 = _interopRequireDefault(_q);
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -105,9 +117,29 @@ function getEventOffer(id) {
 
 // Gets a list of Events matching a given key
 function index(req, res) {
-  var eventUrl = 'http://app.ticketmaster.com/discovery/v2/events.json?keyword=' + req.query.key + '&startDateTime=' + (0, _moment2.default)().format('YYYY-MM-DDTHH:mm:ss') + 'Z&countryCode=US&apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
-  console.log(eventUrl);
-  return _requestPromise2.default.get(eventUrl).then(respondWithResult(res)).catch(handleError(res));
+
+  getAllEvents(req.query.key).then(function (data) {
+    var conacted = [];
+    var events = JSON.parse(data[0]);
+    var venues = JSON.parse(data[1]);
+    if (events._embedded) {
+      _lodash2.default.each(events._embedded.events, function (a, i) {
+        if (i === 0) {
+          a.first = true;
+        }
+        conacted.push(a);
+      });
+    }
+    if (venues._embedded) {
+      _lodash2.default.each(venues._embedded.venues, function (a, i) {
+        if (i === 0) {
+          a.first = true;
+        }
+        conacted.push(a);
+      });
+    }
+    return (0, _stringify2.default)(conacted);
+  }).then(respondWithResult(res)).catch(handleError(res));
 }
 
 // Gets a single Event from the DB
@@ -127,6 +159,12 @@ function offers(req, res) {
   getEventOffer(req.params.id).then(respondWithResult(res)).catch(handleError(res));
 }
 
+function getAllEvents(query) {
+  var eventUrl = 'http://app.ticketmaster.com/discovery/v2/events.json?keyword=' + query + '&startDateTime=' + (0, _moment2.default)().format('YYYY-MM-DDTHH:mm:ss') + 'Z&countryCode=US&apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
+  var venueUrl = 'https://app.ticketmaster.com/discovery/v2/venues.json?keyword=' + query + '&apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
+  console.log(eventUrl, venueUrl, '*****');
+  return _q2.default.all([_requestPromise2.default.get(eventUrl), _requestPromise2.default.get(venueUrl)]);
+}
 // Creates a new Event in the DB
 function create(req, res) {
   return _event2.default.create(req.body).then(respondWithResult(res, 201)).catch(handleError(res));
