@@ -125,7 +125,10 @@ function index(req, res) {
     if (events._embedded) {
       _lodash2.default.each(events._embedded.events, function (a, i) {
         if (i === 0) {
-          a.first = true;
+          var clone = _lodash2.default.cloneDeep(a);
+          conacted.push(_lodash2.default.assignIn(clone, {
+            first: true
+          }));
         }
         conacted.push(a);
       });
@@ -133,7 +136,10 @@ function index(req, res) {
     if (venues._embedded) {
       _lodash2.default.each(venues._embedded.venues, function (a, i) {
         if (i === 0) {
-          a.first = true;
+          var clone = _lodash2.default.cloneDeep(a);
+          conacted.push(_lodash2.default.assignIn(clone, {
+            first: true
+          }));
         }
         conacted.push(a);
       });
