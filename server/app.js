@@ -20,9 +20,17 @@ var _environment = require('./config/environment');
 
 var _environment2 = _interopRequireDefault(_environment);
 
+var _uAPI = require('./config/uAPI');
+
+var _uAPI2 = _interopRequireDefault(_uAPI);
+
 var _http = require('http');
 
 var _http2 = _interopRequireDefault(_http);
+
+var _uapiJson = require('uapi-json');
+
+var _uapiJson2 = _interopRequireDefault(_uapiJson);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -58,6 +66,25 @@ function startServer() {
     console.log('Express server listening on %d, in %s mode', _environment2.default.port, app.get('env'));
   });
 }
+var settings = {
+  auth: {
+    username: _uAPI2.default.username,
+    password: _uAPI2.default.password
+  }
+};
+var AirService = _uapiJson2.default.createAirService(settings);
+
+AirService.importPNR().catch(function (err) {
+  if (err instanceof _uapiJson2.default.errors.Common.ValidationError) {
+    console.log('Validation error occured');
+  }
+  if (err instanceof _uapiJson2.default.errors.Request.RequestValidationError) {
+    console.log('Validation error occured in request');
+  }
+  if (err instanceof _uapiJson2.default.errors.Request.RequestValidationError.ParamsMissing) {
+    console.log('Params are missing for request');
+  }
+});
 
 (0, _setImmediate3.default)(startServer);
 

@@ -14,10 +14,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _stringify = require('babel-runtime/core-js/json/stringify');
-
-var _stringify2 = _interopRequireDefault(_stringify);
-
 var _promise = require('babel-runtime/core-js/promise');
 
 var _promise2 = _interopRequireDefault(_promise);
@@ -33,9 +29,9 @@ var _fastJsonPatch = require('fast-json-patch');
 
 var _fastJsonPatch2 = _interopRequireDefault(_fastJsonPatch);
 
-var _package = require('./package.model');
+var _package2 = require('./package.model');
 
-var _package2 = _interopRequireDefault(_package);
+var _package3 = _interopRequireDefault(_package2);
 
 var _q = require('q');
 
@@ -44,6 +40,10 @@ var _q2 = _interopRequireDefault(_q);
 var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
+
+var _requestPromise = require('request-promise');
+
+var _requestPromise2 = _interopRequireDefault(_requestPromise);
 
 var _moment = require('moment');
 
@@ -54,6 +54,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var hotelCtrl = require('../hotel/hotel.controller.js');
 var flightCtrl = require('../flight/flight.controller.js');
 var eventCtrl = require('../event/event.controller.js');
+
+var travelportHotelCtrl = require('../travelportHotel/travelportHotel.controller.js');
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
@@ -108,133 +110,73 @@ function formatDate(date) {
   return (0, _moment2.default)(date).format('YYYY-MM-DD');
 }
 
-function getAllData(id, lat, long, departureAirport, departureDate, eventId, arrivalDate) {
-  return _q2.default.all([hotelCtrl.getAllHotels(lat + ',' + long, formatDate(departureDate), formatDate(arrivalDate)), flightCtrl.getAllFlights(lat, long, departureAirport, (0, _moment2.default)(departureDate).format()), eventCtrl.getEventOffer(eventId)]).then(function (data) {
-    return {
-      gold: goldPackage(data),
-      backstage: backstagePackage(data),
-      'red carpet': redcarpetPackage(data),
-      vip: vipPackage(data)
-    };
-  });
+function lookUpAirportByLatLong(lat, long) {
+  var airportLookupUrl = 'http://terminal2.expedia.com/x/geo/features?within=30km&lat=' + lat + '&lng=' + long + '&type=airport&verbose=3&apikey=BAGEROtURYYysKTHQIE7HK5m0tOFIjSH';
+  return (0, _requestPromise2.default)(airportLookupUrl);
 }
 
-function vipPackage(iter) {
-  var hotel = _lodash2.default.orderBy(iter[0][0], ['hotelStarRating', 'proximityDistanceInMiles', 'percentRecommended', 'lowRate'], ['desc', 'asc', 'desc', 'asc']);
-  var flight = _lodash2.default.orderBy(iter[1], function (a) {
-    return [a.segments.length, Number(a.totalFare)];
-  });
-  var events = _lodash2.default.cloneDeep(iter[2]);
-  events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
-    ticketTypes.attributes.prices = _lodash2.default.orderBy(ticketTypes.attributes.prices, function (a) {
-      console.log(Number(a.priceZone), '******');
-      return Number(a.priceZone);
+function getAllData(id, lat, long, departureAirport, departureDate, eventId, arrivalDate, adults, childrens) {
+
+  return lookUpAirportByLatLong(lat, long).then(function (dat) {
+    var arrivalAirport = JSON.parse(dat)[0].tags.iata.airportCode.value;
+    return _q2.default.all([travelportHotelCtrl.getAllHotels(arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), eventCtrl.getEventOffer(eventId)]).then(function (data) {
+      return _q2.default.allSettled([_package(3, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(2, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(1, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(0, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens)]).then(function (results) {
+        return {
+          gold: results[0],
+          redCarpet: results[1],
+          backstage: results[2],
+          vip: results[3]
+        };
+      });
     });
-    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[0];
-    console.log('vipPackage: ' + (0, _stringify2.default)(_lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[0]));
   });
-  // _.map(events.offers, function (offer) {
-  //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
-  // });
-  return {
-    hotel: _lodash2.default.chunk(hotel, hotel.length / 4)[0],
-    flight: _lodash2.default.chunk(flight, flight.length / 4)[0],
-    events: events
-  };
 }
 
-function backstagePackage(iter) {
-  var hotel = _lodash2.default.orderBy(iter[0][0], ['hotelStarRating', 'proximityDistanceInMiles', 'percentRecommended', 'lowRate'], ['desc', 'asc', 'desc', 'asc']);
-  var flight = _lodash2.default.orderBy(iter[1], function (a) {
-    return [a.segments.length, Number(a.totalFare)];
-  });
-  //price array for events is nested deep iter[2].offers[0].attributes.prices
-  var events = _lodash2.default.cloneDeep(iter[2]);
+function _package(packageType, iter, arrivalAirport, departureDate, arrivalDate, lat, long, adults, children) {
+  var defer = _q2.default.defer();
+  var hotels = _lodash2.default.orderBy(iter[0][0], ['HotelRating', 'distanceToEvent', 'lowRate'], ['desc', 'asc', 'asc']);
+  var chunkedHotels = _lodash2.default.chunk(hotels, hotels.length / 4)[packageType];
+  // var flight = _.orderBy(iter[1], function (a) {
+  //   return Number(a.totalFare);
+  // });
+  var events = _lodash2.default.cloneDeep(iter[1]);
   events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
     ticketTypes.attributes.prices = _lodash2.default.orderBy(ticketTypes.attributes.prices, function (a) {
       return Number(a.priceZone);
     });
-    console.log('backstagePackage: ' + (0, _stringify2.default)(_lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[1]));
-    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[1];
+    if (ticketTypes.attributes.prices.length > 3) {
+      ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[packageType];
+    }
   });
-  // _.map(events.offers, function (offer) {
-  //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
-  // });
-  return {
-    hotel: _lodash2.default.chunk(hotel, hotel.length / 4)[2],
-    flight: _lodash2.default.chunk(flight, flight.length / 4)[2],
-    events: events
-  };
-}
-
-function redcarpetPackage(iter) {
-  var hotel = _lodash2.default.orderBy(iter[0][0], ['hotelStarRating', 'proximityDistanceInMiles', 'percentRecommended', 'lowRate'], ['desc', 'asc', 'desc', 'asc']);
-  var flight = _lodash2.default.orderBy(iter[1], function (a) {
-    return [a.segments.length, Number(a.totalFare)];
-  });
-  var events = _lodash2.default.cloneDeep(iter[2]);
-  events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
-    ticketTypes.attributes.prices = _lodash2.default.orderBy(ticketTypes.attributes.prices, function (a) {
-      return Number(a.priceZone);
+  return travelportHotelCtrl.getHotelRates(chunkedHotels, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, children).then(function (dat) {
+    var mergedHotels = _lodash2.default.map(dat, function (item, i) {
+      return _lodash2.default.merge(item, chunkedHotels[i]);
     });
-    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[2];
-    console.log('redcarpetPackage: ' + (0, _stringify2.default)(_lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[2]));
-  });
-  // _.map(events.offers, function (offer) {
-  //   offer.attributes.prices = _.chunk(offer.attributes.prices, offer.attributes.prices.length / 4);
-  // });
-  return {
-    hotel: _lodash2.default.chunk(hotel, hotel.length / 4)[1],
-    flight: _lodash2.default.chunk(flight, flight.length / 4)[1],
-    events: events
-  };
-}
-
-function goldPackage(iter) {
-  var hotel = _lodash2.default.orderBy(iter[0][0], function (a) {
-    return Number(a.lowRate);
-  });
-  var flight = _lodash2.default.orderBy(iter[1], function (a) {
-    return Number(a.totalFare);
-  });
-  // var events = iter[2];
-  var events = _lodash2.default.cloneDeep(iter[2]);
-  events.offers = _lodash2.default.each(events.offers, function (ticketTypes) {
-    ticketTypes.attributes.prices = _lodash2.default.orderBy(ticketTypes.attributes.prices, function (a) {
-      return Number(a.priceZone);
+    defer.resolve({
+      hotel: mergedHotels,
+      // flight: _.chunk(flight, flight.length / 4)[0],
+      events: events
     });
-    ticketTypes.attributes.prices = _lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[3];
-    console.log('goldPackage: ' + (0, _stringify2.default)(_lodash2.default.chunk(ticketTypes.attributes.prices, ticketTypes.attributes.prices.length / 4)[3]));
+    return defer.promise;
+  }).catch(function (err) {
+    console.warn(err, 'err occured ************************');
   });
-  // _.map(events.offers, function (offer) {
-  //   offer.attributes.prices = _.last(_.chunk(offer.attributes.prices, Math.ceil(offer.attributes.prices.length / 4)));
-  // });
-  return {
-    hotel: _lodash2.default.chunk(hotel, hotel.length / 4)[0],
-    flight: _lodash2.default.chunk(flight, flight.length / 4)[0],
-    events: events
-  };
 }
 // Gets a list of Packages
 function index(req, res) {
-  return _package2.default.find().exec().then(respondWithResult(res)).catch(handleError(res));
+  return _package3.default.find().exec().then(respondWithResult(res)).catch(handleError(res));
 }
 
 // Gets a single Package from the DB
 // ids are for packages type
 // 0 = gold & 3 = vip
 function show(req, res) {
-  // req.query.lat, req.query.long, req.query.departureAirport, req.query.departureDate,
-  // req.query.eventId, req.query.arrivalDate
-  getAllData(req.params.id, req.query.lat, req.query.long, req.query.departureAirport, req.query.departureDate, req.query.eventId, req.query.arrivalDate)
-  // return Package.findById(req.params.id).exec()
-  //   .then(handleEntityNotFound(res))
-  .then(respondWithResult(res)).catch(handleError(res));
+  getAllData(req.params.id, req.query.lat, req.query.long, req.query.departureAirport, req.query.departureDate, req.query.eventId, req.query.arrivalDate, Number(req.query.adults), Number(req.query.childrens)).then(respondWithResult(res)).catch(handleError(res));
 }
 
 // Creates a new Package in the DB
 function create(req, res) {
-  return _package2.default.create(req.body).then(respondWithResult(res, 201)).catch(handleError(res));
+  return _package3.default.create(req.body).then(respondWithResult(res, 201)).catch(handleError(res));
 }
 
 // Upserts the given Package in the DB at the specified ID
@@ -242,7 +184,7 @@ function upsert(req, res) {
   if (req.body._id) {
     delete req.body._id;
   }
-  return _package2.default.findOneAndUpdate({
+  return _package3.default.findOneAndUpdate({
     _id: req.params.id
   }, req.body, {
     upsert: true,
@@ -256,11 +198,11 @@ function patch(req, res) {
   if (req.body._id) {
     delete req.body._id;
   }
-  return _package2.default.findById(req.params.id).exec().then(handleEntityNotFound(res)).then(patchUpdates(req.body)).then(respondWithResult(res)).catch(handleError(res));
+  return _package3.default.findById(req.params.id).exec().then(handleEntityNotFound(res)).then(patchUpdates(req.body)).then(respondWithResult(res)).catch(handleError(res));
 }
 
 // Deletes a Package from the DB
 function destroy(req, res) {
-  return _package2.default.findById(req.params.id).exec().then(handleEntityNotFound(res)).then(removeEntity(res)).catch(handleError(res));
+  return _package3.default.findById(req.params.id).exec().then(handleEntityNotFound(res)).then(removeEntity(res)).catch(handleError(res));
 }
 //# sourceMappingURL=package.controller.js.map
