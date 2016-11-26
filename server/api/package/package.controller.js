@@ -54,6 +54,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var hotelCtrl = require('../hotel/hotel.controller.js');
 var flightCtrl = require('../flight/flight.controller.js');
 var eventCtrl = require('../event/event.controller.js');
+var iata = require('airport-codes');
 
 var travelportHotelCtrl = require('../travelportHotel/travelportHotel.controller.js');
 
@@ -115,42 +116,36 @@ function lookUpAirportByLatLong(lat, long) {
   return (0, _requestPromise2.default)(airportLookupUrl);
 }
 
-function getAllData(id, lat, long, departureAirport, departureDate, eventId, arrivalDate, adults, childrens) {
-
-  return lookUpAirportByLatLong(lat, long).then(function (dat) {
-    var arrivalAirport = JSON.parse(dat)[0].tags.iata.airportCode.value;
-    return _q2.default.all([travelportHotelCtrl.getAllHotels(arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), eventCtrl.getEventOffer(eventId)]).then(function (hotels) {
-      var hotelArr = hotels[0][0];
-      return travelportHotelCtrl.getHotelRates(hotelArr, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens).then(function (hot) {
-        var mergedHotels = _lodash2.default.map(hot, function (item, i) {
-          return _lodash2.default.merge(item, hotelArr[i]);
-        });
-        hotels[0][0] = _lodash2.default.filter(mergedHotels, function (o) {
-          return o.state === 'fulfilled';
-        });
-        return hotels;
+function getAllData(id, lat, long, departureAirport, departureDate, eventId, arrivalDate, adults, childrens, eventCity, eventCountry) {
+  console.log(eventCity, eventCountry);
+  var arrivalAirport = iata.findWhere({
+    city: eventCity,
+    country: eventCountry.includes('United States') ? 'United States' : eventCountry
+  }).get('iata');
+  // return lookUpAirportByLatLong(lat, long).then(dat => {
+  // let arrivalAirport = JSON.parse(dat)[0].tags.iata.airportCode.value;
+  return _q2.default.all([travelportHotelCtrl.getAllHotels(arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), eventCtrl.getEventOffer(eventId)]).then(function (hotels) {
+    var hotelArr = hotels[0][0];
+    return travelportHotelCtrl.getHotelRates(hotelArr, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens).then(function (hot) {
+      var mergedHotels = _lodash2.default.map(hot, function (item, i) {
+        return _lodash2.default.merge(item, hotelArr[i]);
       });
-    })
-    // .then(function (hotels) {
-    //   const hotelArr = hotels[0][0];
-    //   _.each(hotelArr, function (hotel) {
-    //     hotelCtrl.getAllHotels(`${hotel.Location.lat},${hotel.Location.lng}`, moment().add(30, 'days').format('YYYY-MM-DD'), moment().add(35, 'days').format('YYYY-MM-DD'))
-    //       .then(function (res) {
-    //         debugger
-    //       });
-    //   });
-    // })
-    .then(function (data) {
-      return _q2.default.allSettled([_package(3, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(2, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(1, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(0, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens)]).then(function (results) {
-        return {
-          'Basic Package': results[0],
-          'Middle Package': results[1],
-          'Premium Package': results[2],
-          'VIP Package': results[3]
-        };
+      hotels[0][0] = _lodash2.default.filter(mergedHotels, function (o) {
+        return o.state === 'fulfilled';
       });
+      return hotels;
+    });
+  }).then(function (data) {
+    return _q2.default.allSettled([_package(3, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(2, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(1, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(0, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens)]).then(function (results) {
+      return {
+        'Basic Package': results[0],
+        'Middle Package': results[1],
+        'Premium Package': results[2],
+        'VIP Package': results[3]
+      };
     });
   });
+  // });
 }
 
 function _package(packageType, iter, arrivalAirport, departureDate, arrivalDate, lat, long, adults, children) {
@@ -211,7 +206,7 @@ function index(req, res) {
 // ids are for packages type
 // 0 = gold & 3 = vip
 function show(req, res) {
-  getAllData(req.params.id, req.query.lat, req.query.long, req.query.departureAirport, req.query.departureDate, req.query.eventId, req.query.arrivalDate, Number(req.query.adults), Number(req.query.childrens)).then(respondWithResult(res)).catch(handleError(res));
+  getAllData(req.params.id, req.query.lat, req.query.long, req.query.departureAirport, req.query.departureDate, req.query.eventId, req.query.arrivalDate, Number(req.query.adults), Number(req.query.childrens), req.query.eventCity, req.query.eventCountry).then(respondWithResult(res)).catch(handleError(res));
 }
 
 // Creates a new Package in the DB
