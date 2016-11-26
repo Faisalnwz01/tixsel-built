@@ -166,7 +166,7 @@ function offers(req, res) {
 }
 
 function getAllEvents(query) {
-  var eventUrl = 'http://app.ticketmaster.com/discovery/v2/events.json?keyword=' + query + '&startDateTime=' + (0, _moment2.default)().format('YYYY-MM-DDTHH:mm:ss') + 'Z&countryCode=US&apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
+  var eventUrl = 'http://app.ticketmaster.com/discovery/v2/events.json?keyword=' + query + '&startDateTime=' + (0, _moment2.default)().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss') + 'Z&countryCode=US&apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
   var venueUrl = 'https://app.ticketmaster.com/discovery/v2/venues.json?keyword=' + query + '&apikey=g4sXxf0ioySFxO0FQFYnGMEoAwW1uMoQ';
   console.log(eventUrl, venueUrl, '*****');
   return _q2.default.all([_requestPromise2.default.get(eventUrl), _requestPromise2.default.get(venueUrl)]);
