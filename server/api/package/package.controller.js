@@ -130,9 +130,11 @@ function getAllData(id, lat, long, departureAirport, departureDate, eventId, arr
       var mergedHotels = _lodash2.default.map(hot, function (item, i) {
         return _lodash2.default.merge(item, hotelArr[i]);
       });
+      console.log('***************************************** Number of hotels returned totel = ' + mergedHotels.length);
       hotels[0][0] = _lodash2.default.filter(mergedHotels, function (o) {
         return o.state === 'fulfilled';
       });
+      console.log('***************************************** Number of hotels returned fulfilled = ' + hotels[0][0].length);
       return hotels;
     });
   }).then(function (data) {
