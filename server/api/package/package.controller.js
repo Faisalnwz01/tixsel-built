@@ -130,6 +130,13 @@ function getAllData(id, lat, long, departureAirport, departureDate, eventId, arr
         });
         return hotels;
       });
+    }).then(function (hotels) {
+      var hotelArr = hotels[0][0];
+      _lodash2.default.each(hotelArr, function (hotel) {
+        hotelCtrl.getAllHotels(hotel.Location.lat + ',' + hotel.Location.lng, (0, _moment2.default)().add(30, 'days').format('YYYY-MM-DD'), (0, _moment2.default)().add(35, 'days').format('YYYY-MM-DD')).then(function (res) {
+          debugger;
+        });
+      });
     }).then(function (data) {
       return _q2.default.allSettled([_package(3, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(2, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(1, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens), _package(0, data, arrivalAirport, formatDate(departureDate), formatDate(arrivalDate), lat, long, adults, childrens)]).then(function (results) {
         return {
