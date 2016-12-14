@@ -70,6 +70,7 @@ function onConnect(socket) {
   });
 
   // Insert sockets below
+  require('../api/welcome/welcome.socket').register(socket);
   require('../api/travelportHotel/travelportHotel.socket').register(socket);
   require('../api/package/package.socket').register(socket);
   require('../api/hotel/hotel.socket').register(socket);

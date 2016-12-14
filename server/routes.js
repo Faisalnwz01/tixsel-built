@@ -10,6 +10,7 @@ Object.defineProperty(exports, "__esModule", {
 
 exports.default = function (app) {
   // Insert routes below
+  app.use('/api/welcomes', require('./api/welcome'));
   app.use('/api/travelportHotels', require('./api/travelportHotel'));
   app.use('/api/packages', require('./api/package'));
   app.use('/api/hotels', require('./api/hotel'));
