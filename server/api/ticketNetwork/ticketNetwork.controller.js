@@ -95,6 +95,7 @@ function handleError(res, statusCode) {
 // Gets a list of TicketNetworks
 function index(req, res) {
   return _requestPromise2.default.get('http://tnwebservices-test.ticketnetwork.com/TNWebservice/v3.2/TNWebserviceStringInputs.asmx/SearchEvents?websiteConfigID=23245&searchTerms=' + req.query.key + '&whereClause=&orderByClause=Date').then(function (dat) {
+    console.log('got this back for the searched term ' + dat);
     return _xml2json2.default.toJson(dat);
   }).then(respondWithResult(res)).catch(handleError(res));
 }
